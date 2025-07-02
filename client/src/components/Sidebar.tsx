@@ -621,7 +621,8 @@ const Sidebar = ({
           </div>
 
           <div className="space-y-2">
-            {connectionStatus === "connected" && (
+            {(connectionStatus === "connected" ||
+              connectionStatus === "connected-stateless") && (
               <div className="grid grid-cols-2 gap-4">
                 <Button
                   data-testid="connect-button"
@@ -639,18 +640,20 @@ const Sidebar = ({
                 </Button>
               </div>
             )}
-            {connectionStatus !== "connected" && (
-              <Button className="w-full" onClick={onConnect}>
-                <Play className="w-4 h-4 mr-2" />
-                Connect
-              </Button>
-            )}
+            {connectionStatus !== "connected" &&
+              connectionStatus !== "connected-stateless" && (
+                <Button className="w-full" onClick={onConnect}>
+                  <Play className="w-4 h-4 mr-2" />
+                  Connect
+                </Button>
+              )}
 
             <div className="flex items-center justify-center space-x-2 mb-4">
               <div
                 className={`w-2 h-2 rounded-full ${(() => {
                   switch (connectionStatus) {
                     case "connected":
+                    case "connected-stateless":
                       return "bg-green-500";
                     case "error":
                       return "bg-red-500";
@@ -666,6 +669,8 @@ const Sidebar = ({
                   switch (connectionStatus) {
                     case "connected":
                       return "Connected";
+                    case "connected-stateless":
+                      return "Connected (Stateless)";
                     case "error":
                       return "Connection Error, is your MCP server running?";
                     case "error-connecting-to-proxy":
@@ -677,33 +682,35 @@ const Sidebar = ({
               </span>
             </div>
 
-            {loggingSupported && connectionStatus === "connected" && (
-              <div className="space-y-2">
-                <label
-                  className="text-sm font-medium"
-                  htmlFor="logging-level-select"
-                >
-                  Logging Level
-                </label>
-                <Select
-                  value={logLevel}
-                  onValueChange={(value: LoggingLevel) =>
-                    sendLogLevelRequest(value)
-                  }
-                >
-                  <SelectTrigger id="logging-level-select">
-                    <SelectValue placeholder="Select logging level" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.values(LoggingLevelSchema.enum).map((level) => (
-                      <SelectItem key={level} value={level}>
-                        {level}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
+            {loggingSupported &&
+              (connectionStatus === "connected" ||
+                connectionStatus === "connected-stateless") && (
+                <div className="space-y-2">
+                  <label
+                    className="text-sm font-medium"
+                    htmlFor="logging-level-select"
+                  >
+                    Logging Level
+                  </label>
+                  <Select
+                    value={logLevel}
+                    onValueChange={(value: LoggingLevel) =>
+                      sendLogLevelRequest(value)
+                    }
+                  >
+                    <SelectTrigger id="logging-level-select">
+                      <SelectValue placeholder="Select logging level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.values(LoggingLevelSchema.enum).map((level) => (
+                        <SelectItem key={level} value={level}>
+                          {level}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
             {stdErrNotifications.length > 0 && (
               <>

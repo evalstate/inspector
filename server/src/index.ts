@@ -402,6 +402,26 @@ app.get("/health", (req, res) => {
   });
 });
 
+app.get("/server-status", (req, res) => {
+  const sessionId = req.query.sessionId as string;
+  if (!sessionId) {
+    res.status(400).json({ error: "sessionId parameter required" });
+    return;
+  }
+
+  const serverTransport = serverTransports.get(sessionId);
+  if (!serverTransport) {
+    res.status(404).json({ error: "Session not found" });
+    return;
+  }
+
+  res.json({
+    sessionId: (serverTransport as any).sessionId || null,
+    isStateless: (serverTransport as any).sessionId === undefined,
+    transportType: serverTransport.constructor.name,
+  });
+});
+
 app.get("/config", (req, res) => {
   try {
     res.json({

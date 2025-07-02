@@ -416,8 +416,9 @@ export function useConnection({
       }
 
       let capabilities;
+      let transport: Transport;
       try {
-        const transport =
+        transport =
           transportType === "streamable-http"
             ? new StreamableHTTPClientTransport(mcpProxyServerUrl as URL, {
                 sessionId: undefined,
@@ -476,7 +477,48 @@ export function useConnection({
       }
 
       setMcpClient(client);
-      setConnectionStatus("connected");
+
+      // Check server status via the proxy's /server-status endpoint
+      try {
+        const clientSessionId = (transport as any).sessionId;
+        console.log("DEBUG: Client sessionId:", clientSessionId);
+
+        if (clientSessionId) {
+          const serverStatusUrl = new URL(
+            `${getMCPProxyAddress(config)}/server-status`,
+          );
+          serverStatusUrl.searchParams.append("sessionId", clientSessionId);
+
+          console.log(
+            "DEBUG: Fetching server status from:",
+            serverStatusUrl.toString(),
+          );
+          const serverStatusResponse = await fetch(serverStatusUrl);
+          const serverStatus = await serverStatusResponse.json();
+
+          console.log("DEBUG: Server status response:", serverStatus);
+
+          if (
+            serverStatusResponse.ok &&
+            serverStatus.isStateless !== undefined
+          ) {
+            setConnectionStatus(
+              serverStatus.isStateless ? "connected-stateless" : "connected",
+            );
+          } else {
+            console.warn(
+              "Failed to get server status, defaulting to connected",
+            );
+            setConnectionStatus("connected");
+          }
+        } else {
+          console.warn("No client sessionId found, defaulting to connected");
+          setConnectionStatus("connected");
+        }
+      } catch (error) {
+        console.warn("Error fetching server status:", error);
+        setConnectionStatus("connected");
+      }
     } catch (e) {
       console.error(e);
       setConnectionStatus("error");

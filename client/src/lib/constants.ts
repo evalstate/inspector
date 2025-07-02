@@ -22,6 +22,7 @@ export const getServerSpecificKey = (
 export type ConnectionStatus =
   | "disconnected"
   | "connected"
+  | "connected-stateless"
   | "error"
   | "error-connecting-to-proxy";
 
